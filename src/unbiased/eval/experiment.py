@@ -1,9 +1,13 @@
 """The core experiment: inject a known bias pocket, train a model on it, run every
 detector, and score how well each recovers the injected region (AUC).
 
-Two pocket shapes per dataset: axis-aligned (a box, Slice Finder's home turf) and a
-ball (non-axis-aligned, where box slices cannot fit cleanly). The honest question is
-whether DCA's neighbourhood aggregation wins on the ball.
+Pocket shapes: axis-aligned (a box, Slice Finder's home turf) and a ball (non-axis).
+Regimes: clean (full label flip) and weak (partial flip + label noise, where the
+per-instance signal is unreliable and DCA's aggregation should help if it ever does).
+
+DCA here uses the multi-signal fusion and a bias-relevant neighbourhood space. The
+naive_fusion baseline averages the same signals with no aggregation, isolating whether
+DCA's aggregation adds anything.
 """
 
 from __future__ import annotations
@@ -13,23 +17,28 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_auc_score
 
-from unbiased.baselines import isolation_forest_score, raw_gap_score, slice_finder_score
+from unbiased.baselines import isolation_forest_score, slice_finder_score
 from unbiased.data import FairnessDataset
 from unbiased.dca import DeterministicDCA
 from unbiased.inject import ball_pocket, box_pocket, inject_label_bias
-from unbiased.signals import fairness_signals
+from unbiased.signals import (
+    fairness_signals_multi,
+    fused_signal_matrix,
+    naive_fusion_score,
+)
 
-DETECTORS = ["dca", "raw_gap", "isolation_forest", "slice_finder"]
+DETECTORS = ["dca", "naive_fusion", "raw_gap", "isolation_forest", "slice_finder"]
 
 
 def run_once(
     ds: FairnessDataset,
     pocket_kind: str,
     seed: int,
+    weak: bool = False,
     max_n: int = 4000,
     k: int = 15,
 ) -> dict:
-    """One trial: returns AUC at recovering the injected pocket for each detector."""
+    """One trial: AUC at recovering the injected pocket for each detector."""
     rng = np.random.default_rng(seed)
     n = len(ds.y)
     idx = rng.choice(n, max_n, replace=False) if n > max_n else np.arange(n)
@@ -42,21 +51,29 @@ def run_once(
     else:
         raise ValueError(pocket_kind)
 
-    y_bias, _ = inject_label_bias(y, group, pocket, target_group=0, flip_fraction=1.0, seed=seed)
+    flip = 0.5 if weak else 1.0
+    y_bias, _ = inject_label_bias(y, group, pocket, target_group=0, flip_fraction=flip, seed=seed)
+    if weak:  # add label noise so the per-instance signal is unreliable
+        noise = rng.random(len(y_bias)) < 0.10
+        y_bias = np.where(noise, 1 - y_bias, y_bias)
 
     feat = np.column_stack([X, group])
     clf = RandomForestClassifier(n_estimators=150, random_state=seed, n_jobs=-1).fit(feat, y_bias)
     scores = clf.predict_proba(feat)[:, 1]
     cf = clf.predict_proba(np.column_stack([X, 1 - group]))[:, 1]
+    # a fair reference model that never sees the protected attribute
+    fair = RandomForestClassifier(n_estimators=150, random_state=seed, n_jobs=-1).fit(X, y_bias)
+    fair_scores = fair.predict_proba(X)[:, 1]
 
-    sig = fairness_signals(scores, group, dist, cf_scores=cf, k=k)
-    dca = DeterministicDCA(seed=seed, safe_weight=1.0).score(sig.danger, sig.safe, sig.dca_neighbors)
+    ms = fairness_signals_multi(scores, group, dist, y=y, cf_scores=cf, fair_scores=fair_scores, k=k)
+    dca = DeterministicDCA(seed=seed, safe_weight=1.0).score(ms.danger, ms.safe, ms.dca_neighbors)
 
     gt = pocket.astype(int)
     preds = {
         "dca": dca.mcav,
-        "raw_gap": raw_gap_score(sig),
-        "isolation_forest": isolation_forest_score(np.column_stack([sig.danger, sig.safe]), seed),
+        "naive_fusion": naive_fusion_score(ms),
+        "raw_gap": ms.table["gap"],
+        "isolation_forest": isolation_forest_score(fused_signal_matrix(ms), seed),
         "slice_finder": slice_finder_score(dist, group, scores),
     }
     return {name: roc_auc_score(gt, p) for name, p in preds.items()}
@@ -65,15 +82,20 @@ def run_once(
 def run_experiment(
     loaders: dict,
     pocket_kinds=("axis", "ball"),
+    regimes=("clean", "weak"),
     seeds=range(5),
     max_n: int = 4000,
 ) -> pd.DataFrame:
-    """Run every dataset x pocket x seed and return a tidy results frame."""
+    """Run every dataset x pocket x regime x seed and return a tidy results frame."""
     rows = []
     for ds_name, loader in loaders.items():
         ds = loader()
         for pocket_kind in pocket_kinds:
-            for seed in seeds:
-                aucs = run_once(ds, pocket_kind, seed, max_n=max_n)
-                rows.append({"dataset": ds_name, "pocket": pocket_kind, "seed": seed, **aucs})
+            for regime in regimes:
+                for seed in seeds:
+                    aucs = run_once(ds, pocket_kind, seed, weak=(regime == "weak"), max_n=max_n)
+                    rows.append(
+                        {"dataset": ds_name, "pocket": pocket_kind, "regime": regime,
+                         "seed": seed, **aucs}
+                    )
     return pd.DataFrame(rows)
