@@ -51,8 +51,6 @@ local bias that global metrics miss.
 Inject a bias pocket, train a model on it, and ask each detector to point at where the
 bias is. Higher AUC means it found the injected region.
 
-![Detector recovery AUC](docs/images/benchmark.png)
-
 | regime | pocket | DCA | fused (simple) | raw gap | isolation forest | Slice Finder |
 |--------|--------|----:|---------------:|--------:|-----------------:|-------------:|
 | clean  | axis   | 0.58 | 0.71 | 0.69 | 0.69 | 0.70 |

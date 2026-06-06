@@ -1,4 +1,4 @@
-"""Generate the README figures from the experiment results and a real bias map.
+"""Generate the README figure: a real bias map (injected pocket vs detector score).
 
     python scripts/make_figures.py
 """
@@ -8,9 +8,8 @@ from pathlib import Path
 import matplotlib
 
 matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
-import pandas as pd  # noqa: E402
+from matplotlib import pyplot as plt  # noqa: E402
 from sklearn.decomposition import PCA  # noqa: E402
 from sklearn.ensemble import RandomForestClassifier  # noqa: E402
 
@@ -20,29 +19,6 @@ from unbiased.signals import fairness_signals_multi, naive_fusion_score  # noqa:
 
 IMG = Path("docs/images")
 IMG.mkdir(parents=True, exist_ok=True)
-DETECTORS = ["dca", "naive_fusion", "raw_gap", "isolation_forest", "slice_finder"]
-LABELS = ["DCA", "fused (simple)", "raw gap", "isolation forest", "Slice Finder"]
-
-
-def benchmark_figure() -> None:
-    df = pd.read_csv("docs/experiment_results.csv")
-    g = df[df.regime == "clean"].groupby("pocket")[DETECTORS].mean()
-    fig, ax = plt.subplots(figsize=(8, 4.5))
-    x = np.arange(len(DETECTORS))
-    w = 0.38
-    for i, pk in enumerate(["axis", "ball"]):
-        ax.bar(x + (i - 0.5) * w, g.loc[pk].to_numpy(), w, label=f"{pk}-aligned pocket")
-    ax.axhline(0.5, ls=":", c="gray", lw=1)
-    ax.text(len(DETECTORS) - 1.4, 0.51, "chance", color="gray", fontsize=8)
-    ax.set_xticks(x)
-    ax.set_xticklabels(LABELS, rotation=15)
-    ax.set_ylabel("AUC at recovering injected bias")
-    ax.set_ylim(0.4, 0.85)
-    ax.set_title("How well each detector recovers an injected bias pocket")
-    ax.legend()
-    fig.tight_layout()
-    fig.savefig(IMG / "benchmark.png", dpi=130)
-    print("wrote", IMG / "benchmark.png")
 
 
 def bias_map_figure() -> None:
@@ -83,5 +59,4 @@ def bias_map_figure() -> None:
 
 
 if __name__ == "__main__":
-    benchmark_figure()
     bias_map_figure()
