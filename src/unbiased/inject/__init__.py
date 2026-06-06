@@ -6,6 +6,7 @@ recover the bias we put in, and where.
 """
 
 from unbiased.inject.bias import (
+    ball_pocket,
     box_pocket,
     inject_label_bias,
     inject_measurement_bias,
@@ -14,6 +15,7 @@ from unbiased.inject.bias import (
 
 __all__ = [
     "box_pocket",
+    "ball_pocket",
     "inject_label_bias",
     "inject_measurement_bias",
     "inject_sampling_bias",

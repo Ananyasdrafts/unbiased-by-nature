@@ -17,12 +17,26 @@ import numpy as np
 
 
 def box_pocket(X: np.ndarray, dims: tuple[int, ...] = (0, 1), quantile: float = 0.6) -> np.ndarray:
-    """A pocket = instances above the given quantile on every listed feature."""
+    """An axis-aligned pocket: instances above the given quantile on every listed feature."""
     X = np.asarray(X, dtype=float)
     mask = np.ones(len(X), dtype=bool)
     for d in dims:
         mask &= X[:, d] > np.quantile(X[:, d], quantile)
     return mask
+
+
+def ball_pocket(
+    X: np.ndarray, dims: tuple[int, ...] = (0, 1, 2, 3), fraction: float = 0.16, seed: int = 0
+) -> np.ndarray:
+    """A non-axis-aligned pocket: the `fraction` of instances nearest a random centre in
+    the given feature subspace (a sphere, which axis-aligned slices cannot fit cleanly)."""
+    X = np.asarray(X, dtype=float)
+    rng = np.random.default_rng(seed)
+    sub = X[:, list(dims)]
+    centre = sub[rng.integers(len(sub))]
+    dist = np.linalg.norm(sub - centre, axis=1)
+    k = max(1, int(round(fraction * len(X))))
+    return dist <= np.partition(dist, k)[k]
 
 
 def inject_label_bias(
