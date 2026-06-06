@@ -47,12 +47,14 @@ class DeterministicDCA:
         n_cells: int = 100,
         lifespan_range: tuple[float, float] = (5.0, 15.0),
         n_passes: int = 3,
+        safe_weight: float = 2.0,
         anomaly_threshold: float = ANOMALOUS_MCAV,
         seed: int = 0,
     ) -> None:
         self.n_cells = n_cells
         self.lifespan_range = lifespan_range
         self.n_passes = n_passes
+        self.safe_weight = safe_weight  # w in k = D - w*S; canonical 2.0, lower = more sensitive
         self.anomaly_threshold = anomaly_threshold
         self.seed = seed
 
@@ -102,7 +104,7 @@ class DeterministicDCA:
             c = j % self.n_cells
             nb = neighbors[s]
             csm[c] += float((safe[nb] + danger[nb]).sum())
-            kval[c] += float((danger[nb] - 2.0 * safe[nb]).sum())
+            kval[c] += float((danger[nb] - self.safe_weight * safe[nb]).sum())
             sampled[c].extend(int(x) for x in nb)
             if csm[c] >= threshold[c]:
                 migrate(c)
