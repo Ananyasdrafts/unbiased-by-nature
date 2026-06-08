@@ -51,8 +51,7 @@ def bias_map_figure() -> None:
     axes[1].set_title("The detector's bias score")
     axes[1].set_xlabel("PC1")
     fig.colorbar(sc, ax=axes[1], label="bias score")
-    fig.suptitle("Adult: an injected bias pocket and where the simple detector scores it",
-                 y=1.02)
+    fig.suptitle("An injected bias pocket and where the simple detector scores it", y=1.02)
     fig.tight_layout()
     fig.savefig(IMG / "bias_map.png", dpi=130, bbox_inches="tight")
     print("wrote", IMG / "bias_map.png")
