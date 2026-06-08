@@ -1,14 +1,10 @@
 # Unbiased by Nature
 
 Can an idea borrowed from the immune system find the bias that standard fairness tools
-average away? I spent a while finding out, properly this time.
+average away? 
 
 This started as an undergrad research idea: the immune system is very good at noticing
-local threats, so could an immune-inspired algorithm notice local *unfairness*? I came
-back to it with better tools and a more skeptical eye, built a ground-truth benchmark
-to actually test it, and got a clear answer. The short version: the simple version of
-the idea works well, the fancy immune machinery on top does not, and I can show exactly
-why.
+local threats, so could an immune-inspired algorithm notice local *unfairness*? 
 
 ## what the Dendritic Cell Algorithm is, and why I picked it
 
@@ -36,8 +32,7 @@ local bias that global metrics miss.
   true-positive-rate gap, and deviation from a fair reference model, plus a
   counterfactual-flip PAMP that fires when a prediction depends on the protected attribute.
 - a **ground-truth benchmark**: inject a known bias into a known region, then measure how
-  well each detector recovers it. This is the part the bio-inspired fairness literature
-  usually skips, and it is the only honest way to score a bias detector.
+  well each detector recovers it. 
 - a comparison across **four datasets** (Adult, COMPAS, Taiwan credit, German credit),
   **two pocket geometries** (axis-aligned boxes and non-axis-aligned balls), **two noise
   regimes**, and **four detectors** including Slice Finder, a purpose-built subgroup auditor.
@@ -58,7 +53,7 @@ bias is. Higher AUC means it found the injected region.
 | weak   | axis   | 0.53 | 0.58 | 0.59 | 0.57 | 0.60 |
 | weak   | ball   | 0.53 | 0.60 | 0.56 | 0.54 | 0.67 |
 
-Two things stand out, and they are the real findings:
+Two things stand out:
 
 **A simple multi-signal local fairness score is a strong bias localizer.** The "fused"
 detector, just the four local signals averaged together, recovers injected bias about as
@@ -71,9 +66,6 @@ pools it across a neighbourhood. That throws away the resolution a plain average
 built a noisy regime specifically because that is where aggregation is supposed to help,
 and it still did not. So the value lives in the *signals*, a local and individual notion of
 unfairness, not in the immune algorithm layered on top.
-
-That is a result worth having. It says: reach for the simple local fairness signal, not the
-elaborate bio-inspired detector, and now there is evidence for that instead of a hunch.
 
 ## what I learned
 
