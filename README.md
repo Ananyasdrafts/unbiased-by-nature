@@ -95,3 +95,27 @@ dead ends, is in [docs/rebuild-notes.md](docs/rebuild-notes.md).
 Adult (income, protected attribute sex), COMPAS (recidivism, race), Taiwan default of
 credit card clients (default, sex), and German credit (credit risk, age). Standard fairness
 preprocessing, fetched and cached on first run.
+
+## what's next
+
+DCA was the first algorithm I reached for, not the last word. This is really a testbed for
+finding local bias, and the immune system has more than one good idea. A few directions I
+want to run through the same ground-truth benchmark:
+
+- **Negative selection, the better-fit immune algorithm.** The immune system also works by
+  learning what "self" (healthy, normal) looks like and generating detectors that fire on
+  anything unlike it. Map "self" to fair behaviour and those detectors cover the unfair
+  regions. The real-valued version covers space with variable-radius spheres, which fit
+  non-axis-aligned bias pockets far more naturally than axis-aligned slices, and it returns
+  the pockets themselves rather than a score. No lossy maturation step. I think this is the
+  approach that actually suits the problem, and it keeps the project honest to its name.
+- **Evolutionary subgroup search.** Evolve subgroups toward maximum group disparity with a
+  genetic algorithm, an evolutionary cousin of Slice Finder that is not stuck with
+  axis-aligned boxes.
+- **A real method from the positive result.** The simple fused signal works. Replace DCA's
+  pooling with proper spatial smoothing and turn it into a clean, interpretable detector.
+- **A harder benchmark.** Intersectional and multi-attribute bias, measurement and sampling
+  bias rather than only label flips, and real disparities, not just injected ones.
+
+If none of the bio-inspired bets beat the simple detector, that is a finding too, and the
+benchmark is what lets me say so.
