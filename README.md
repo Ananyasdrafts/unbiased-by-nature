@@ -98,9 +98,7 @@ preprocessing, fetched and cached on first run.
 
 ## what's next
 
-DCA was the first algorithm I reached for, not the last word. This is really a testbed for
-finding local bias, and the immune system has more than one good idea. A few directions I
-want to run through the same ground-truth benchmark:
+DCA was just the first thing I tried. The bigger goal here is figuring out what actually finds local bias, and the immune system has more than one interesting idea worth testing. A few directions I'd like to run through the same benchmark:
 
 - **Negative selection, the better-fit immune algorithm.** The immune system also works by
   learning what "self" (healthy, normal) looks like and generating detectors that fire on
@@ -116,6 +114,3 @@ want to run through the same ground-truth benchmark:
   pooling with proper spatial smoothing and turn it into a clean, interpretable detector.
 - **A harder benchmark.** Intersectional and multi-attribute bias, measurement and sampling
   bias rather than only label flips, and real disparities, not just injected ones.
-
-If none of the bio-inspired bets beat the simple detector, that is a finding too, and the
-benchmark is what lets me say so.
