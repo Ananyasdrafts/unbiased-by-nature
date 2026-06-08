@@ -3,6 +3,10 @@
 Can an idea borrowed from the immune system find the bias that standard fairness tools
 average away? 
 
+In one line: I built an immune-inspired bias detector and a synthetic benchmark that injects
+known bias to test it against, and found that a simple multi-signal detector beats the
+biological algorithm that inspired the whole project.
+
 This started as an undergrad research idea: the immune system is very good at noticing
 local threats, so could an immune-inspired algorithm notice local *unfairness*? 
 
@@ -36,8 +40,8 @@ local bias that global metrics miss.
 - a comparison across **four datasets** (Adult, COMPAS, Taiwan credit, German credit),
   **two pocket geometries** (axis-aligned boxes and non-axis-aligned balls), **two noise
   regimes**, and **four detectors** including Slice Finder, a purpose-built subgroup auditor.
-- **bias-relevant dimensionality weighting** so the neighbourhoods follow the bias instead
-  of being washed out by irrelevant features.
+- **weighting the features that carry the bias**, so a small pocket is not washed out by the
+  dimensions that have nothing to do with it.
 
 ![An injected bias pocket on Adult and the detector's bias score](docs/images/bias_map.png)
 
