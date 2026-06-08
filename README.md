@@ -3,9 +3,10 @@
 Can an idea borrowed from the immune system find the bias that standard fairness tools
 average away? 
 
-In one line: I built an immune-inspired bias detector and a synthetic benchmark that injects
-known bias to test it against, and found that a simple multi-signal detector beats the
-biological algorithm that inspired the whole project.
+In one line: I adapted an immune algorithm (the Dendritic Cell Algorithm) to find local bias
+and built a synthetic benchmark that injects known bias to test detectors honestly. A simple
+multi-signal detector beat it on the first pass, so the benchmark is set up to keep testing
+other nature-inspired approaches.
 
 This started as an undergrad research idea: the immune system is very good at noticing
 local threats, so could an immune-inspired algorithm notice local *unfairness*? 
